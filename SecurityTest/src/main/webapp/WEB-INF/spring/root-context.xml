@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<context:annotation-config />	
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver"></property>
+		<property name="url" value="jdbc:mysql://localhost:3306/security"></property>
+		<property name="username" value="root"></property>
+		<property name="password" value="1234"></property>
+	</bean>
+	
+	<!-- <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.example.security"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+	</bean> -->
+	
+	
+	<!-- jpa 설정 -->
+	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<!-- jpa 데이터베이스 연결 정보 -->
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- entity 클래스들을 읽어올 패키지 -->
+		<property name="packagesToScan" value="com.example.security"></property>
+		<!-- jpa와 데이터베이스를 연결하는 어댑터 설정 -->
+		<property name="jpaVendorAdapter">
+			<!-- jpa 구현체로 하이버네이트를 선택 -->
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<!-- 하이버네이트 설정 데이터베이스 정보 설정 -->
+				<property name="database" value="MYSQL"></property>
+				<!-- DDL 쿼리를 생성할지에 대한 설정 -->
+				<property name="generateDdl" value="true"></property>
+				<!-- 하이버네이트가 생성한 쿼리를 출력할지에 대한 설정 -->
+				<property name="showSql" value="true"></property>
+				<!-- 하이버네이트가 쿼리를 만들 때 사용할 클래스 설정 -->
+				<property name="databasePlatform" value="org.hibernate.dialect.MySQL57Dialect"></property>
+			</bean>
+		</property>
+		<!-- jpa에서 사용할 추가적인 설정 -->
+		<property name="jpaProperties">
+			<props>
+				<!-- 엔티티 정보를 읽을 때 테이블 생성 설정 -->
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory"></property>
+	</bean>
+	
+	<jpa:repositories base-package="com.example.security"></jpa:repositories>
+	
+	<tx:annotation-driven/>
+	
+</beans>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+	
+	<security:http auto-config="true" use-expressions="true">
+	
+		<!-- isAnonymous() 세션에 저장되어있지 않은 사용자에 인가한다. -->
+		<security:intercept-url pattern="/login" access="isAnonymous()" />
+		<security:intercept-url pattern="/join" access="isAnonymous()" />
+		<security:intercept-url pattern="/joinOk" access="isAnonymous()" />
+		
+		<!-- hasAuthority('ADMIN')는 ADMIN 역할을 가진 사람에게만 인가한다. -->
+		<security:intercept-url pattern="/admin/**" access="hasAuthority('ADMIN')" />
+		
+		<!-- isAuthenticated()는 인증 여부를 검증한다. -->
+		<security:intercept-url pattern="/**" access="isAuthenticated()" />
+		
+		<!--hasRole('ADMIN')는 ADMIN 권한을 가진 사람에게만 인가한다.  -->
+		<!-- <security:intercept-url pattern="/admin/**" access="hasRole('ADMIN')" /> -->
+		
+		<!-- permitAll은 모든 사용자에게 인가한다. -->
+		<security:intercept-url pattern="/home" access="permitAll" />
+		
+		<!-- 인가되지 않은 사용자가 url에 접근했을 때 처리하는 방식 -->
+		<security:access-denied-handler error-page="/access-denied" />
+		
+		<!-- logout-url은 로그아웃 처리를 할 url을 작성한다. 
+			/logout은 스프링시큐리티에서 기본적으로 제공해준다.
+			logout-success-url은 로그아웃이 성공했을 때 이동하는 url이다. -->
+		<security:logout logout-url="/logout" logout-success-url="/login"/>
+		
+		<!-- invalid-session-url은 세션이 만료되었을 때 이동시킬 url이다. -->
+		<security:session-management invalid-session-url="/login?session=invalid">
+			
+			<!-- max-sessions는 동시에 로그인 가능한 계정의 숫자이다. -->
+			<!-- expired-url 동시 로그인이 발생했을 때, 이전 로그인 한 사용자가 이동될 url이다. -->
+			<security:concurrency-control max-sessions="1" expired-url="/login?session=expire"/>
+		</security:session-management>
+		
+		<!-- 스프링시큐리티에서 제공하는 기본로그인페이지를 사용하지 않을경우
+			아래와 같이 커스텀해서 사용할 수 있다.
+			login-page는 login할 컨트롤러의 url을 작성한다.
+			login-processing-url은 스프링 시큐리티에서 제공한다. 
+			default-target-url은 로그인이 성공했을 때 이동하는 페이지
+			authentication-failure-url은 로그인이 실패했을 때 이동하는 페이지
+			always-use-default-target는 로그인이 성공할 경우 무조건 default-target-url로
+			이동하도록 설정한다. -->
+		<security:form-login 
+			login-page="/login"
+			login-processing-url="/loginProcess"
+			default-target-url="/home"
+			authentication-failure-url="/login?error=true"
+			always-use-default-target="true"
+			/>
+			
+		<security:remember-me key="asd" token-validity-seconds="86400" />
+			
+		<!-- csrf 검증을 비활성화 한다 -->
+		<security:csrf disabled="true"/>
+		
+	</security:http>
+	
+	<bean id="userService" class="com.example.security.UserDetailService" />
+	
+	<!-- 스프링 시큐리티 인증 관리 -->
+	<security:authentication-manager>
+		<security:authentication-provider user-service-ref="userService">
+			<security:password-encoder ref="passwordEncoder"/>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+</beans>
